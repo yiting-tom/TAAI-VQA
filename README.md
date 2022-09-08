@@ -1,17 +1,16 @@
-# master_thesis_ChingShan_Tseng_P7608601
+# VQA Research
 
 Relation-Aware Image Captioning for Explainable Visual Question Answering
 - [oral ppt](http://redmine.ikmlab.csie.ncku.edu.tw/attachments/download/11041/20210916-oral.pdf)
 - [thesis](http://redmine.ikmlab.csie.ncku.edu.tw/attachments/download/11053/20210928_ChingShan_thesis.pdf)
 
-
 ## Requirements
-- torch==1.8.1+cu111
-- torchvison=0.9.1+cu111
-- numpy
-- matplotlib
+- torch==1.10.1+cu111
+- torchvison==0.11.2+cu111
+- ray==1.13.1
+- opencv-python==4.6.0.66
 
-## Data
+## Datasets
 - [VQA v2 dataset](https://visualqa.org/download.html)
     - Questions
     - Annotations
@@ -21,51 +20,42 @@ Relation-Aware Image Captioning for Explainable Visual Question Answering
     - Annotations
 - [Visual features](https://github.com/MILVLG/bottom-up-attention.pytorch)
     - 36 features per image (fixed)
-    - Follow the instruction of feature extraction.
+    - Follow the instruction to extract features.
 
 ## Setup
-
+1. Download the datasets.
+```bash
+make download_datasets
 ```
-bash scripts/setup.sh
+2. Download and set up the feature extraction module repository.
+```bash
+# Clone the repository
+make download_feature_extraction
+# Set up the repository
+make setup_feature_extraction
 ```
-This script will:
-- Setup folders
-- Download data
-- Extract features following this [repo](https://github.com/MILVLG/bottom-up-attention.pytorch)
-
-## Preprocessing
-
+3. Download the pre-trained model.
+```bash
+make download_pretrained_model
 ```
-bash scripts/preprocessing.sh
+4. Extract bbox.
+```bash
+make extract_train_bbox
+make extract_val_bbox
 ```
-
-This script will:
-- Tokenize questions and captions of VQA-E and VQA
-- Construct relation graph for each image
-
-## Pre-train Stage
-
-```
-bash scripts/pre-train.sh
-```
-
-## Decode Captions
-
-To speed up the process, we seperate the whole decoding process into two scripts and execute them parallelly.
-Afterward, the decoded text files are merged as a json file.
-
-```
-bash scripts/decode.sh
-```
-```
-bash scripts/decode2.sh
+5. Extract features by bbox.
+```bash
+make extract_train_feat
+make extract_val_feat
 ```
 
-## Fine-tune Stage
+## Docker
+Please make sure that the docker and docker-compose are installed.
+1. Build the docker image.
+```bash
+make docker_build
 ```
-bash scripts/fine-tune.sh
+2. Run the docker container.
+```bash
+make docker_run
 ```
-
-## Analysis
-
-`analysis.ipynb` shows the figures and `sample.ipynb` shows the attention map of given image.

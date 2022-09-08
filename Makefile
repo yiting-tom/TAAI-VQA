@@ -25,7 +25,7 @@ decompress_dataset:
 
 	@echo "Unzipping VQA v2.0..."
 
-download_dataset:
+download_datasets:
 	@echo "Make directories 'data/' and 'zips/'"
 	@mkdir -p ${ROOT}/zips ${ROOT}/data
 
@@ -50,7 +50,7 @@ download_dataset:
 
 	@echo "Downloading Datasets DONE!"
 
-setup_feature_extraction:
+download_feature_extraction:
 	@cd ${ROOT}
 ifeq (,$(wildcard ${BOTTOM_UP_DIR}))
 	@echo "Clone bottom-up-attention repo..."
@@ -64,13 +64,14 @@ ifeq (,$(wildcard ${BOTTOM_UP_DIR}/apex))
 	@echo "Clone apex repo..."
 	@git clone https://github.com/NVIDIA/apex.git
 endif
-	@cd ${BOTTOM_UP_DIR}/apex && CUDA_HOME=/usr/local/cuda && python setup.py install
+
+setup_feature_extraction:
+	@cd ${BOTTOM_UP_DIR}/apex && python setup.py install
 	@cd ${BOTTOM_UP_DIR}/detectron2 && pip install -e .
 	@cd ${BOTTOM_UP_DIR} && python setup.py build develop
-	@pip install ray
 
 # Download pre-trained feature model (Faster R-CNN, 36 regions per image)
-download_pretrain_model:
+download_pretrained_model:
 ifeq (,$(wildcard ${BOTTOM_UP_DIR}/bua-caffe-frcn-r101-k36.pth))
 	wget https://awma1-my.sharepoint.com/:u:/g/personal/yuz_l0_tn/EUKhQ3hSRv9JrrW64qpNLSIBGoOjEGCkF8zvgBP9gKax-w?download=1 -O \
 	${BOTTOM_UP_DIR}/bua-caffe-frcn-r101-k36.pth
