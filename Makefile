@@ -5,7 +5,7 @@ docker_build:
 	docker-compose build
 
 docker_run:
-	docker run --gpus all -it --rm --name vqa -v ${ROOT}:/app master_thesis_chingshan_tseng_p76084601_core:latest
+	docker run --gpus all -it --rm --name vqa -v ${ROOT}:/app vqa/core:latest
 
 decompress_dataset:
 	@echo "Unzipping GLoVe..."
@@ -51,18 +51,13 @@ download_datasets:
 	@echo "Downloading Datasets DONE!"
 
 download_feature_extraction:
-	@cd ${ROOT}
 ifeq (,$(wildcard ${BOTTOM_UP_DIR}))
 	@echo "Clone bottom-up-attention repo..."
 	@git clone --recursive https://github.com/MILVLG/bottom-up-attention.pytorch ${BOTTOM_UP_DIR}
 endif
-	@echo "Install dependencies..."
-	@cd ${BOTTOM_UP_DIR}/detectron2 && pip install -e .
-
-	@cd ${BOTTOM_UP_DIR}
 ifeq (,$(wildcard ${BOTTOM_UP_DIR}/apex))
 	@echo "Clone apex repo..."
-	@git clone https://github.com/NVIDIA/apex.git
+	@git clone https://github.com/NVIDIA/apex.git ${BOTTOM_UP_DIR}/apex
 endif
 
 setup_feature_extraction:
@@ -77,11 +72,11 @@ ifeq (,$(wildcard ${BOTTOM_UP_DIR}/bua-caffe-frcn-r101-k36.pth))
 	${BOTTOM_UP_DIR}/bua-caffe-frcn-r101-k36.pth
 endif
 
-extract_train_bbox: download_pretrain_model
+extract_train_bbox: download_pretrained_model
 	@mkdir -p ${ROOT}/COCO/bbox_36/train2014
 	cd ${BOTTOM_UP_DIR} && python extract_features.py  --mode 'caffe' \
 								--num-cpus 0 \
-								--gpus '0' \
+								--gpus '0,1' \
 								--extract-mode 'bboxes' \
 								--min-max-boxes '36,36' \
 								--config-file ${BOTTOM_UP_DIR}/configs/caffe/test-caffe-r101-fix36.yaml \
@@ -89,12 +84,12 @@ extract_train_bbox: download_pretrain_model
 								--out-dir ${ROOT}/COCO/bbox_36/train2014 \
 								--fastmode
 
-extract_val_bbox: download_pretrain_model
+extract_val_bbox: download_pretrained_model
 	@echo "Make dir for features..."
 	@mkdir -p ${ROOT}/COCO/bbox_36/val2014
 	cd ${BOTTOM_UP_DIR} && python extract_features.py  --mode 'caffe' \
 								--num-cpus 0 \
-								--gpus '0' \
+								--gpus '0,1' \
 								--extract-mode 'bboxes' \
 								--min-max-boxes 36,36 \
 								--config-file ${BOTTOM_UP_DIR}/configs/caffe/test-caffe-r101-fix36.yaml \
@@ -103,12 +98,12 @@ extract_val_bbox: download_pretrain_model
 								--fastmode
 
 # Extract training features
-extract_train_feat: download_pretrain_model
+extract_train_feat: download_pretrained_model
 	@echo "Make dir for features..."
 	@mkdir -p ${ROOT}/COCO/feature_36/train2014
 	cd ${BOTTOM_UP_DIR} && python extract_features.py  --mode 'caffe' \
 								--num-cpus 0 \
-								--gpus '0' \
+								--gpus '0,1' \
 								--extract-mode 'bbox_feats' \
 								--min-max-boxes '36,36' \
 								--config-file ${BOTTOM_UP_DIR}/configs/caffe/test-caffe-r101-fix36.yaml \
@@ -118,12 +113,12 @@ extract_train_feat: download_pretrain_model
 								--fastmode
 
 # Extract validatation features
-extract_val_feat: download_pretrain_model
+extract_val_feat: download_pretrained_model
 	@echo "Make dir for features..."
 	@mkdir -p ${ROOT}/COCO/feature_36/val2014
 	cd ${BOTTOM_UP_DIR} && python extract_features.py  --mode 'caffe' \
 								--num-cpus 0 \
-								--gpus '0' \
+								--gpus '0,1' \
 								--extract-mode 'bbox_feats' \
 								--min-max-boxes 36,36 \
 								--config-file ${BOTTOM_UP_DIR}/configs/caffe/test-caffe-r101-fix36.yaml \

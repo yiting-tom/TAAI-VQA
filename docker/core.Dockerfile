@@ -1,4 +1,4 @@
-FROM nvidia/cuda:11.3.1-devel-ubuntu18.04
+FROM nvidia/cuda:11.1.1-devel-ubuntu18.04
 
 WORKDIR /app
 
@@ -21,7 +21,8 @@ RUN apt-get update \
 
 RUN python3.8 -m venv /venv
 ENV PATH="/venv/bin:$PATH"
+
 RUN pip install --upgrade pip
-RUN pip install torch==1.10.0+cu111 torchvision==0.11.2+cu111 --extra-index-url https://download.pytorch.org/whl/cu111
 RUN pip install -r requirements.txt
+RUN pip install torch==1.10.1+cu111 torchvision==0.11.2+cu111 --extra-index-url https://download.pytorch.org/whl/cu111
 ENV CUDA_HOME="/usr/local/cuda-11.1"
