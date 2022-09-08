@@ -1,0 +1,19 @@
+version: '3.9'
+
+services:
+  core:
+    image: vqa/core:latest
+    container_name: core
+    build:
+      context: ./docker
+      dockerfile: core.Dockerfile
+    volumes:
+      - core_volume:/app
+    stdin_open: true
+    tty: true
+    command: /bin/bash
+
+volumes:
+  core_volume:
+    name: core
+    driver: local
