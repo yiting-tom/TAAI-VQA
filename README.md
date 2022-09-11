@@ -27,6 +27,7 @@ Relation-Aware Image Captioning for Explainable Visual Question Answering
 ```bash
 make download_datasets
 ```
+
 2. Download and set up the feature extraction module repository.
 ```bash
 # Clone the repository
@@ -34,19 +35,27 @@ make download_feature_extraction
 # Set up the repository
 make setup_feature_extraction
 ```
+
 3. Download the pre-trained model.
 ```bash
 make download_pretrained_model
 ```
-4. Extract bbox.
+
+4. Extract bbox by image.
 ```bash
 make extract_train_bbox
 make extract_val_bbox
 ```
-5. Extract features by bbox.
+
+5. Extract features by image and bbox.
 ```bash
 make extract_train_feat
 make extract_val_feat
+```
+
+6. Clean the vocabularies and generate the answer candidates.
+```bash
+make generate_vocab
 ```
 
 ## Docker

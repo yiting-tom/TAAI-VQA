@@ -133,3 +133,7 @@ extract_all:
 	@make extract_val_bbox
 	@make extract_val_feat
 	@echo "Extracting features DONE!"
+
+preprocessing:
+	@echo "Perprocessing dataset and generating candadite answers"
+
