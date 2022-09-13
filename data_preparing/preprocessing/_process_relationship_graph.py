@@ -3,7 +3,7 @@ from pathlib import Path
 from tqdm import tqdm
 import torch
 import numpy as np
-
+from configs.logger import l
 
 A_INSIDE_B = torch.tensor([1, 2], dtype=torch.long)
 A_COVER_B = torch.tensor([2, 1], dtype=torch.long)
@@ -13,7 +13,6 @@ INDICES = torch.cat(
     [BBOXES_PAIR_INDEXES, BBOXES_PAIR_INDEXES.flip(1)],
     dim=0,
 ).T.split(1, dim=0)
-
 
 def process_relationship(
     dataset_type: str,
@@ -27,6 +26,7 @@ def process_relationship(
         feature_dir (str): The dir of feature data
         graph_dir (str): The dir of graph(relationship) data
     """
+    l.info(f"Processing {dataset_type} relationship data...")
     # assert the output dir (graph_dir) is exist
     graph_dir: Path = Path(graph_dir) / f"{dataset_type}2014"
     graph_dir.mkdir(parents=True, exist_ok=True)

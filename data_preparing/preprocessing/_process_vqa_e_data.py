@@ -29,10 +29,11 @@ def process_vqa_e_data(
         q_len (int): The maximum length of the question
         c_len (int): The maximum length of the context
     """
+    l.info(f"Preprocessing vqa-e {dataset_type} data")
+
     # Record
     result: List[dict] = []
 
-    l.info(f"Reading VQA-E data from {vqa_e_dir}")
     # Read-out VQA-E data
     with open(f'{vqa_e_dir}/{dataset_type}_set.json') as f:
         data = json.load(f)
@@ -83,7 +84,7 @@ def process_vqa_e_data(
     # Ensure the directory exists
     save_path.parent.mkdir(parents=True, exist_ok=True)
     # Save the processed data
-    l.info(f"Saving VQA-E {dataset_type} data to {save_path}")
+    l.info(f"Saving preprocessed VQA-E {dataset_type} data to {save_path}")
     with open(save_path, 'w') as f:
         json.dump({
             'q_len': q_len,

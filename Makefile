@@ -138,3 +138,4 @@ extract_all:
 preprocessing:
 	@python3 ${ROOT}/data-preparing/generate_candidate_answers.py
 	@python3 ${ROOT}/data-preparing/generate_glove_vocabularies.py
+	@python3 ${ROOT}/data-preparing/preprocessing/preprocessing.py

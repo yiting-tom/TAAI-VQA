@@ -26,7 +26,7 @@ def process_vqa_questions(
         vqa_dir (str): The directory of the VQA dataset
         save_path (str): The json file to save the processed data
     """
-    l.info(f"Reading VQA questions data from {vqa_dir}")
+    l.info(f"Preprocessing VQA {dataset_type} question data")
     with open(f'{vqa_dir}/v2_OpenEnded_mscoco_{dataset_type}2014_questions.json') as f:
         q_json = json.load(f)['questions']
 
@@ -58,7 +58,7 @@ def process_vqa_questions(
     # Ensure the directory exists
     result_save_path.parent.mkdir(parents=True, exist_ok=True)
     # Save the processed data
-    l.info(f"Saving VQA {dataset_type} question data to {result_save_path}")
+    l.info(f"Saving preprocessed VQA {dataset_type} question data to {result_save_path}")
     with open(result_save_path, 'w') as f:
         f.write(
             json.dumps({
@@ -84,7 +84,7 @@ def process_vqa_answers(
         vqa_dir (str): The directory of the VQA dataset
         save_path (str): The json file to save the processed data
     """
-    l.info(f"Reading VQA annotations data from {vqa_dir}")
+    l.info(f"Preprocessing VQA {dataset_type} answer data")
     with open(f'{vqa_dir}/v2_mscoco_{dataset_type}2014_annotations.json') as f:
         a_json = json.load(f)['annotations']
 
@@ -144,7 +144,7 @@ def process_vqa_answers(
     # Ensure the directory exists
     result_save_path.parent.mkdir(parents=True, exist_ok=True)
     # Save the processed data
-    l.info(f"Saving VQA {dataset_type} question data to {result_save_path}")
+    l.info(f"Saving preprocessed VQA {dataset_type} answer data to {result_save_path}")
     with open(result_save_path, 'w') as f:
         f.write(
             json.dumps({
@@ -154,9 +154,9 @@ def process_vqa_answers(
             })
         )
 
-    index_save_path: Path = Path(f'{save_path}/index.pkl')
+    pickle_path: Path = Path(f'{save_path}/vqa_answer_types.pkl')
     # Save the answer type
-    l.info(f"Saving VQA answer type to {result_save_path}")
+    l.info(f"Pickling preprocessed VQA {dataset_type} answer type to {pickle_path}")
     if dataset_type == 'val':
-        with open(index_save_path, 'wb') as f:
+        with open(pickle_path, 'wb') as f:
             pickle.dump(answer_types, f)
