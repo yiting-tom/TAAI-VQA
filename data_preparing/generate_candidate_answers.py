@@ -3,9 +3,8 @@ from pathlib import Path
 import re
 import string
 from typing import List, Dict
-import logging
-
-logging.basicConfig(format="[%(levelname)s] %(message)s", level=logging.DEBUG)
+from configs import pathes
+from configs.logger import l
 
 contractions = {
     "aint": "ain't", "arent": "aren't", "cant": "can't", "couldve":
@@ -116,7 +115,6 @@ def preprocess_answer(answer: str) -> str:
 
 def filter_answers(answers_dset, min_occurence) -> Dict:
     """This will change the answer to preprocessed version"""
-    logging.info('Filtering answers...')
     occurence = {}
 
     for ans_entry in answers_dset:
@@ -130,17 +128,17 @@ def filter_answers(answers_dset, min_occurence) -> Dict:
         if len(occurence[answer]) < min_occurence:
             occurence.pop(answer)
 
-    logging.info('Num of answers that appear >= %d times: %d' % (
+    l.info('Num of answers that appear >= %d times: %d' % (
         min_occurence, len(occurence)))
     return occurence
 
 def load_datasets_answers(train_file: Path, val_file: Path) -> List:
     """Load answers from train and validation dataset"""
-    logging.info('Loading training dataset ...')
+    l.info('Loading training dataset ...')
     train_answer_file = (train_file).absolute()
     train_answers = json.load(open(train_answer_file))
 
-    logging.info('Loading validation dataset ...')
+    l.info('Loading validation dataset ...')
     val_answer_file = (val_file).absolute()
     val_answers = json.load(open(val_answer_file))
 
@@ -148,24 +146,26 @@ def load_datasets_answers(train_file: Path, val_file: Path) -> List:
 
 def save_candidate_answer(occurence: List, save_path: Path) -> None:
     """Save candidate answers to file"""
-    logging.info('Saving candidate answers')
+    l.info('Saving candidate answers')
     with open(save_path, 'w') as f:
         f.write('\n'.join(occurence))
 
 def main():
-    logging.info("Generating candidate answers ...")
+    l.info('Generating candidate answers ...')
     answers: Dict = load_datasets_answers(
-        train_file=Path('/home/P76104419/VQA/Thesis-VQA/data/v2_mscoco_train2014_annotations.json'),
-        val_file=Path('/home/P76104419/VQA/Thesis-VQA/data/v2_mscoco_val2014_annotations.json')
+        train_file=pathes.d_VQA / 'v2_mscoco_train2014_annotations.json',
+        val_file=pathes.d_VQA / 'v2_mscoco_val2014_annotations.json',
     )
 
-    occurence: Dict = filter_answers(answers, 9)
+    occurence: Dict = filter_answers(
+        answers_dset=answers,
+        min_occurence=9,
+    )
 
     save_candidate_answer(
         occurence=occurence.keys(),
-        save_path=Path('/home/P76104419/VQA/Thesis-VQA/data/candidate_answers.txt')
+        sagve_path=pathes.f_CANDIDATE_ANSWERS,
     )
-    logging.info("Done")
 
 if __name__ == '__main__':
     main()
