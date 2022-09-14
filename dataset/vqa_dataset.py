@@ -7,20 +7,13 @@ import json
 import numpy as np
 #%%
 dataset_name = 'train2014'
-questions_path = pathes.d_ANNOTATIONS / 'vqa' / f'{dataset_name}_questions.json'
-questions = json.load(open(questions_path, 'r'))['data']
-
-answers_path = pathes.d_ANNOTATIONS / 'vqa' / f'{dataset_name}_answers.json'
-answers = json.load(open(answers_path, 'r'))['data']
-
-feature_path = pathes.d_COCO_FEATURE / dataset_name
-graph_path = pathes.d_COCO_GRAPH / dataset_name
-
 candidate_answers = pathes.f_CANDIDATE_ANSWERS.read_text().splitlines()
 glove_vocabularies = pathes.f_GOLVE_VOCABULARIES.read_text().splitlines()
+
+questions_path = pathes.d_ANNOTATIONS / 'vqa' / f'{dataset_name}_questions-chunk_0.npz'
+questions = np.load(questions_path, allow_pickle=True)['arr_0']
 #%%
-feature = np.load(feature_path/'COCO_train2014_000000524291.npz')
-graph = np.load(graph_path/'COCO_train2014_000000524291.npz')
+questions[0].keys()
 
 #%%
 def load_answer(index):

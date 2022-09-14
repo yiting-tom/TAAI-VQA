@@ -21,35 +21,35 @@ def process_all():
     
     # Iterate over the dataset types
     for dataset_type in dataset_types:
-        # VQA-E preprocessing
-        # preprocessing.process_vqa_e_data(
-        #     dataset_type=dataset_type,
-        #     vocab_dict=vocab_dict,
-        #     ans_dict=ans_dict,
-        #     vqa_e_dir=args.vqa_e_dir,
-        #     save_path=args.save_path,
-        #     q_len=args.q_len,
-        #     c_len=args.c_len,
-        # )
-        # VQA preprocessing (Questions)
-        preprocessing.process_vqa_questions(
-            dataset_type=dataset_type,
-            vocab_dict=vocab_dict,
-            q_len=args.q_len,
-            vqa_dir=args.vqa_dir,
-            save_path=args.save_path,
-        )
-        # # VQA preprocessing (Answers)
-        # preprocessing.process_vqa_answers(
-        #     dataset_type=dataset_type,
-        #     vocab_dict=vocab_dict,
-        #     ans_dict=ans_dict,
-        #     vqa_dir=args.vqa_dir,
-        #     save_path=args.save_path,
-        # )
         # # relationship graph preprocessing
         # preprocessing.process_relationship(
         #     dataset_type=dataset_type,
         #     feature_dir=args.feature_dir,
         #     graph_dir=args.graph_dir,
         # )
+        # VQA-E preprocessing
+        preprocessing.process_vqa_e_data(
+            dataset_type=dataset_type,
+            vocab_dict=vocab_dict,
+            ans_dict=ans_dict,
+            vqa_e_dir=args.vqa_e_dir,
+            save_path=args.save_path,
+            q_len=args.q_len,
+            c_len=args.c_len,
+        )
+        # # VQA preprocessing (Questions)
+        # preprocessing.process_vqa_questions(
+        #     dataset_type=dataset_type,
+        #     vocab_dict=vocab_dict,
+        #     q_len=args.q_len,
+        #     vqa_dir=args.vqa_dir,
+        #     save_path=args.save_path,
+        # )
+        # VQA preprocessing (Answers)
+        preprocessing.process_vqa_answers(
+            dataset_type=dataset_type,
+            vocab_dict=vocab_dict,
+            ans_dict=ans_dict,
+            vqa_dir=args.vqa_dir,
+            save_path=args.save_path,
+        )

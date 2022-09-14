@@ -5,6 +5,7 @@ from typing import Dict, List
 from tqdm import tqdm
 from util import utils
 from configs.logger import l
+import numpy as np
 
 def process_vqa_e_data(
     dataset_type: str,
@@ -80,14 +81,9 @@ def process_vqa_e_data(
         # ===============================================
         result.append(temp.copy())
 
-    save_path: Path = Path(f'{save_path}/vqa-e/{dataset_type}.json')
+    save_path: Path = Path(f'{save_path}/vqa-e/{dataset_type}.npz')
     # Ensure the directory exists
     save_path.parent.mkdir(parents=True, exist_ok=True)
     # Save the processed data
     l.info(f"Saving preprocessed VQA-E {dataset_type} data to {save_path}")
-    with open(save_path, 'w') as f:
-        json.dump({
-            'q_len': q_len,
-            'c_len': c_len,
-            'data': result
-        }, f)
+    np.savez(save_path, q_len=q_len, c_len=c_len, data=result)

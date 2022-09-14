@@ -46,8 +46,6 @@ download_datasets:
 	@curl "https://s3.amazonaws.com/cvmlp/vqa/mscoco/vqa/v2_Questions_Val_mscoco.zip" > ${DATA}/zips/v2_Questions_Val_mscoco.zip
 
 	@echo "Downloading VQA-E Dataset..."
-
-download_vqae:
 	@wget "https://drive.google.com/u/0/uc?id=1CXogPObRixI1iR51T2px-Q75jdnhByCX&export=download" -O ${DATA}/vqa-e/train_set.json
 	@wget "https://drive.google.com/u/0/uc?id=12e8Px79J4lOT0NBUe2JVzTjbgfRy06qY&export=download" -O ${DATA}/vqa-e/val_set.json
 
