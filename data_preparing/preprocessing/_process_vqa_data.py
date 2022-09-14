@@ -1,3 +1,4 @@
+#%%
 """
 This file defines 2 preprocessing functions for VQA-E dataset
 for questions and answers.
@@ -9,7 +10,7 @@ from pathlib import Path
 from tqdm import tqdm
 from util import utils
 from configs.logger import l
-from configs import pathes
+from configs import pathes, consts
 
 def process_vqa_questions(
     dataset_type: str,
@@ -31,6 +32,9 @@ def process_vqa_questions(
     with open(f'{vqa_dir}/v2_OpenEnded_mscoco_{dataset_type}2014_questions.json') as f:
         q_json = json.load(f)['questions']
 
+    chunk_indexes = np.linspace(0, len(q_json)-1, consts.FILE_CHUNK_NUM+1, dtype=int)[1:].tolist()
+    save_path = Path(save_path) / 'vqa'
+    save_path.mkdir(parents=True, exist_ok=True)
     q_data = []
     # Iterate over the questions
     # q is a dict like this: {
@@ -38,10 +42,10 @@ def process_vqa_questions(
     #     'question': "What is in the person's hand?"
     #     'question_id': 524291000,
     # }
-    for q in tqdm(
-        q_json,
+    for i, q in tqdm(
+        enumerate(q_json),
         desc=f'VQA {dataset_type} question',
-        total=len(q_json)
+        total=len(q_json),
     ):
         image_id: int = q['image_id']
         filename = f'{dataset_type}2014/COCO_{dataset_type}2014_{str(image_id).zfill(12)}.npz'
@@ -66,13 +70,16 @@ def process_vqa_questions(
             'image_graph': graph_data,
             'q_token_ids': ids,
         })
-    
-    result_save_path: Path = Path(f'{save_path}/vqa/{dataset_type}2014_questions.npz')
-    # Ensure the directory exists
-    result_save_path.parent.mkdir(parents=True, exist_ok=True)
-    l.info(f"Saving preprocessed VQA {dataset_type} question data to {result_save_path}")
-    # Save the processed data
-    np.save(result_save_path, q_data)
+
+        if i in chunk_indexes:
+            # Save the processed data
+            chunk_index = chunk_indexes.index(i)
+            result_save_path = save_path / f'{dataset_type}2014_questions-chunk_{chunk_index}.npz'
+
+            l.info(f"Saving preprocessed VQA {dataset_type} question data to {result_save_path}")
+            np.savez(result_save_path, q_data)
+            del q_data
+            q_data = []
     
 def process_vqa_answers(
     dataset_type: str,
@@ -150,15 +157,15 @@ def process_vqa_answers(
         # record the answer counter dictionary
         answer_types[row['answer_type']].append(idx)
 
-    result_save_path: Path = Path(f'{save_path}/vqa/{dataset_type}2014_answers.json')
+    result_save_path: Path = Path(f'{save_path}/vqa/{dataset_type}2014_answers.npz')
     # Ensure the directory exists
     result_save_path.parent.mkdir(parents=True, exist_ok=True)
     # Save the processed data
     l.info(f"Saving preprocessed VQA {dataset_type} answer data to {result_save_path}")
-    np.save(result_save_path, a_data)
+    np.savez(result_save_path, a_data)
 
     # Save the answer type
     if dataset_type == 'val':
-        answer_type_file: Path = Path(f'{save_path}/vqa_answer_types.npy')
+        answer_type_file: Path = Path(f'{save_path}/vqa_answer_types.npz')
         l.info(f"Pickling preprocessed VQA {dataset_type} answer type to {answer_type_file}")
-        np.save(answer_type_file, answer_types)
+        np.savez(answer_type_file, answer_types)
