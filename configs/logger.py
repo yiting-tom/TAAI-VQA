@@ -4,7 +4,7 @@ import time
 from configs import pathes
 from pathlib import Path
 
-log_dir: Path = pathes.LOGS
+log_dir: Path = pathes.d_LOGS
 
 # create log directory if not exists
 log_dir.mkdir(parents=True, exist_ok=True)

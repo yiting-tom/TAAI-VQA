@@ -3,12 +3,13 @@ This file defines 2 preprocessing functions for VQA-E dataset
 for questions and answers.
 """
 import json
-import pickle
+import numpy as np
 from typing import Counter, Dict, List
 from pathlib import Path
 from tqdm import tqdm
 from util import utils
 from configs.logger import l
+from configs import pathes
 
 def process_vqa_questions(
     dataset_type: str,
@@ -37,10 +38,22 @@ def process_vqa_questions(
     #     'question': "What is in the person's hand?"
     #     'question_id': 524291000,
     # }
-    for q in tqdm(q_json, desc=f'VQA {dataset_type} question'):
+    for q in tqdm(
+        q_json,
+        desc=f'VQA {dataset_type} question',
+        total=len(q_json)
+    ):
         image_id: int = q['image_id']
+        filename = f'{dataset_type}2014/COCO_{dataset_type}2014_{str(image_id).zfill(12)}.npz'
+        # read the image feature
+        image_data = np.load(pathes.d_COCO_FEATURE / filename)['x']
+        # read the image relationship graph
+        graph_data = np.load(pathes.d_COCO_GRAPH / filename)['graph']
+        # get the question string
+        q_string = q['question']
+
         _, ids = utils.get_tokens_and_ids(
-            sentence=q['question'],
+            sentence=q_string,
             vocab_dict=vocab_dict,
         )
         ids, _ = utils.padding_ids(
@@ -49,24 +62,17 @@ def process_vqa_questions(
             vocab_dict=vocab_dict,
         )
         q_data.append({
-            'img_file': f'COCO_{dataset_type}2014_{str(image_id).zfill(12)}.npz',
-            'q': ids,
-            'q_word': q['question'],
+            'image_feature': image_data,
+            'image_graph': graph_data,
+            'q_token_ids': ids,
         })
     
-    result_save_path: Path = Path(f'{save_path}/vqa/{dataset_type}2014_questions.json')
+    result_save_path: Path = Path(f'{save_path}/vqa/{dataset_type}2014_questions.npz')
     # Ensure the directory exists
     result_save_path.parent.mkdir(parents=True, exist_ok=True)
-    # Save the processed data
     l.info(f"Saving preprocessed VQA {dataset_type} question data to {result_save_path}")
-    with open(result_save_path, 'w') as f:
-        f.write(
-            json.dumps({
-                'description': 'This is VQA v2.0 question dataset.', 
-                'data_type': dataset_type,
-                'data': q_data,
-            })
-        )
+    # Save the processed data
+    np.save(result_save_path, q_data)
     
 def process_vqa_answers(
     dataset_type: str,
@@ -109,7 +115,11 @@ def process_vqa_answers(
     #    'answer_type': 'other',
     #    'question_id': 458752000,
     # }
-    for idx, row in tqdm(enumerate(a_json), desc=f'VQA {dataset_type} answer'):
+    for idx, row in tqdm(
+        enumerate(a_json),
+        desc=f'VQA {dataset_type} answer',
+        total=len(a_json),
+    ):
         answers: List[str] = []
 
         # get all answers from answer dictionary
@@ -145,18 +155,10 @@ def process_vqa_answers(
     result_save_path.parent.mkdir(parents=True, exist_ok=True)
     # Save the processed data
     l.info(f"Saving preprocessed VQA {dataset_type} answer data to {result_save_path}")
-    with open(result_save_path, 'w') as f:
-        f.write(
-            json.dumps({
-            'description': 'This is VQA v2.0 answer dataset.', 
-            'data_type': dataset_type,
-            'data': a_data
-            })
-        )
+    np.save(result_save_path, a_data)
 
-    pickle_path: Path = Path(f'{save_path}/vqa_answer_types.pkl')
     # Save the answer type
-    l.info(f"Pickling preprocessed VQA {dataset_type} answer type to {pickle_path}")
     if dataset_type == 'val':
-        with open(pickle_path, 'wb') as f:
-            pickle.dump(answer_types, f)
+        answer_type_file: Path = Path(f'{save_path}/vqa_answer_types.npy')
+        l.info(f"Pickling preprocessed VQA {dataset_type} answer type to {answer_type_file}")
+        np.save(answer_type_file, answer_types)

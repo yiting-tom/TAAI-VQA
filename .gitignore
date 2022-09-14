@@ -161,3 +161,4 @@ cython_debug/
 bottom-up-attention.pytorch/
 data/
 .vscode/
+logs/

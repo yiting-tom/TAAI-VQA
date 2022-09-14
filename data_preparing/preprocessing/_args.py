@@ -8,7 +8,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument('--vqa_e_dir',      type=str, default=pathes.d_VQAE)
     p.add_argument('--vqa_dir',        type=str, default=pathes.d_VQA)
     p.add_argument('--feature_dir',    type=str, default=pathes.d_COCO_FEATURE)
-    p.add_argument('--answer_file',    type=str, default=pathes.f_CANDIDATE_ANSWERS)
+    p.add_argument('--ans_file',    type=str, default=pathes.f_CANDIDATE_ANSWERS)
     p.add_argument('--vocab_file',     type=str, default=pathes.f_GOLVE_VOCABULARIES)
 
     # Write

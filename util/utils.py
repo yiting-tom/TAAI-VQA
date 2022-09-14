@@ -1,15 +1,9 @@
-import os
-import time
 import random
-
+from typing import Dict, List, Optional, Tuple
+import re
 import numpy as np
 import torch
 
-
-def get_vocab_list(vocab_path):
-    with open(vocab_path, encoding='utf-8') as f:
-        vocab_list = f.read().split('\n')
-    return vocab_list
 
 def random_seed(seed=10):
     """
@@ -35,51 +29,94 @@ def set_device():
         device = 'cpu'
     return device
 
-class Logger():
-    def __init__(self, exp_name, log_name='log.txt'):
-        save_path = os.path.join('checkpoint', exp_name)
-        if not os.path.exists(save_path):
-            os.makedirs(save_path)
+def get_tokens_and_ids(
+    sentence: str,
+    vocab_dict: Dict[str, int],
+    is_cap: Optional[bool] = False
+) -> Tuple[List[int], List[str]]:
+    """get_tokens_and_ids
 
-        t = time.strftime("%y%m%d-%H-%M-%S_", time.localtime()) # timestamp
-        self.log_file = open(os.path.join(save_path, t + log_name), 'w+')
-        self.exp_name = exp_name
+    Args:
+        sentence (str): The sentence to tokenize.
+        vocab_dict (Dict[str, int]): The vocabulary dictionary.
+        is_cap (Optional[bool], optional): Adding <start> and <end> tokens into head and tail. Defaults to False.
 
-    def write(self, msg):
-        self.log_file.write(time.strftime("%y%m%d-%H:%M:%S ", time.localtime())) # timestamp
-        self.log_file.write(msg+'\n')
-        self.log_file.flush()
-
-    def show(self, msg):
-        print(msg)
-        self.write(msg)
-
-
-def get_tokens(sentence, vocab_list, is_cap=False):
+    Returns:
+        Tuple[List[int], List[str]]: The tokens and ids in list format.
+    """
+    # to lower case
     sentence = sentence.lower()
-    for c in [' \'', '\' ', ' \"', '\" ', '\n']:
-        sentence = sentence.replace(c, ' ')
-    for c in '.,?':
-        sentence = sentence.replace(c, '')
-    sentence = sentence.replace('\'s', ' \'s')
-    words = [i for i in sentence.split() if len(i) > 0]
+    # substitute to space
+    sentence = re.sub(r"( ')|(' )|(\" )|( \")|(\n)", " ", sentence)
+    # remove special characters
+    sentence = re.sub(r"\.|,|\?", "", sentence)
+    # reformat the `'s` to ` 's`
+    sentence = re.sub(r"'s", " 's", sentence)
+
+    # get all tokens which are not space
+    tokens: List[str] = list(filter(
+        lambda t: len(t) > 0,
+        sentence.split()
+    ))
     
+    # insert the <start> and <end> tags if is caption
     if is_cap:
-        words.insert(0, '<start>')
-        words.append('<end>')
+        tokens = ['<start>'] + tokens + ['<end>']
+    
+    # get token ids
+    ids: List[int] = [
+        vocab_dict.get(t, vocab_dict['<oov>'])
+        for t in tokens
+    ]
 
-    tokens = []
-    for word in words:
-        if word in vocab_list: token = vocab_list.index(word)
-        else: token = vocab_list.index('<oov>')
-        tokens.append(token)
-    return tokens, words
+    return tokens, ids
 
+def tokens_to_ids(
+    token_list: List[str],
+    vocab_dict: Dict[str, int],
+) -> List[int]:
+    """tokens_to_ids
 
-def padding(tokens, max_l, vocab_list):
-        l = min(len(tokens), max_l)
-        if l < max_l:
-            tokens.extend([vocab_list.index('<pad>')] * (max_l - l))
-        else:
-            tokens = tokens[:l]
-        return tokens, l
+    Args:
+        token_list (List[str]): The list of tokens to be converted.
+        vocab_dict (Dict[str, int]): The vocabulary dictionary.
+
+    Returns:
+        List[int]: The list of ids.
+    
+    Raises:
+        ValueError: If the token is not in the vocabulary.
+    """
+    return [
+        int(vocab_dict.get(t, -1))
+        for t in token_list
+    ]
+
+def padding_ids(
+    ids: List[int],
+    max_len: int,
+    vocab_dict: Dict[str, int]
+) -> Tuple[np.ndarray, int]:
+    """padding_ids
+
+    Args:
+        ids (List[int]): The list of id to be padded.
+        max_len (int): The max length to padding.
+        vocab_dict (Dict[str, int]): The vocabulary dictionary.
+    
+    Returns:
+        Tuple[List[int], int]: The padded ids and the length of the ids.
+    """
+    # get the padding length
+    pad_len = min(len(ids), max_len)
+
+    if pad_len < max_len:
+        # if the length is less than max_len, padding with <pad>
+        extend_len = max_len - pad_len
+        extend_list = [vocab_dict['<pad>']] * extend_len
+        ids.extend(extend_list)
+    else:
+        # if the length is more than max_len, truncate the ids
+        ids = ids[:pad_len]
+
+    return np.array(ids), pad_len

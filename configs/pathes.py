@@ -12,6 +12,7 @@ d_VQAE:                 Final[Path] = d_DATA / 'vqa-e'
 
 # ========================= COCO  ========================
 d_COCO:                 Final[Path] = d_DATA / 'COCO'
+d_COCO_IMAGE:           Final[Path] = d_COCO / 'images'
 d_COCO_FEATURE:         Final[Path] = d_COCO / 'feature_36'
 d_COCO_BBOX:            Final[Path] = d_COCO / 'bbox_36'
 d_COCO_GRAPH:           Final[Path] = d_COCO / 'graph_36'

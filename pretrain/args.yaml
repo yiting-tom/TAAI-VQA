@@ -1,0 +1,20 @@
+comment           -> exp_name
+load_setting      -> load_exp
+device            -> device
+seed              -> seed
+
+vocab_path        -> data/glove_vocabularies.txt
+load_path         -> data/annotations/vqa-e
+feature_path      -> data/COCO/feature_36
+graph_path        -> data/COCO/graph_36
+index_path        -> data/annotations/vqa_answer_types.pkl
+dataset_type      -> (train2014) ?
+save_path         -> () ?
+
+batch_size        -> batch_size
+shuffle           -> shuffle
+c_len             -> (20) ?
+
+encoder_type      -> (base)
+rnn_type          -> (GRU)
+att_type          -> (new)

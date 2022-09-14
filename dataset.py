@@ -61,13 +61,14 @@ class VQADataset(Dataset):
         return self.get_vqa(index)
 
 class VQAEDataset(Dataset):
-    def __init__(self,
-                 dataset_type: str,
-                 load_path: str,
-                 feature_path: str,
-                 graph_path: str = '',
-                 ans_num: int = 3129,
-                 caption_path: str = ''
+    def __init__(
+        self,
+        dataset_type: str,
+        load_path: str,
+        feature_path: str,
+        graph_path: str = '',
+        ans_num: int = 3129,
+        caption_path: str = ''
     ) -> None:
         super().__init__()
         with open(os.path.join(load_path, f'vqa-e_{dataset_type}.json')) as f:
