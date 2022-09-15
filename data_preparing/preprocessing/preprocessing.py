@@ -27,16 +27,16 @@ def process_all():
         #     feature_dir=args.feature_dir,
         #     graph_dir=args.graph_dir,
         # )
-        # VQA-E preprocessing
-        preprocessing.process_vqa_e_data(
-            dataset_type=dataset_type,
-            vocab_dict=vocab_dict,
-            ans_dict=ans_dict,
-            vqa_e_dir=args.vqa_e_dir,
-            save_path=args.save_path,
-            q_len=args.q_len,
-            c_len=args.c_len,
-        )
+        # # VQA-E preprocessing
+        # preprocessing.process_vqa_e_data(
+        #     dataset_type=dataset_type,
+        #     vocab_dict=vocab_dict,
+        #     ans_dict=ans_dict,
+        #     vqa_e_dir=args.vqa_e_dir,
+        #     save_path=args.save_path,
+        #     q_len=args.q_len,
+        #     c_len=args.c_len,
+        # )
         # # VQA preprocessing (Questions)
         # preprocessing.process_vqa_questions(
         #     dataset_type=dataset_type,

@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import List
 from tqdm import tqdm
-from configs import pathes
+from configs import paths
 from configs.logger import l
 
 def load_glove_vocabulary(glove_file: Path) -> List:
@@ -25,14 +25,14 @@ def save_glove_vocabulary(vocab: List, save_path: Path) -> None:
 def main():
     l.info("Generating GloVe vocabulary ...")
     vocab = load_glove_vocabulary(
-        glove_file=pathes.f_GLOVE/'glove.6B.300d.txt',
+        glove_file=paths.f_GLOVE/'glove.6B.300d.txt',
     )
 
     vocab += ['<start>', '<end>', '<pad>', '<oov>']
 
     save_glove_vocabulary(
         vocab=vocab,
-        save_path=pathes.f_GOLVE_VOCABULARIES,
+        save_path=paths.f_GOLVE_VOCABULARIES,
     )
 
 if __name__ == '__main__':

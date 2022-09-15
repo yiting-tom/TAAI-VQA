@@ -1,34 +1,26 @@
 #%%
 import torch
-from tqdm import tqdm
 from torch.utils.data import Dataset
-from configs import pathes
-import json
+from configs import paths
 import numpy as np
+from configs import consts
 #%%
-dataset_name = 'train2014'
-candidate_answers = pathes.f_CANDIDATE_ANSWERS.read_text().splitlines()
-glove_vocabularies = pathes.f_GOLVE_VOCABULARIES.read_text().splitlines()
-
-questions_path = pathes.d_ANNOTATIONS / 'vqa' / f'{dataset_name}_questions-chunk_0.npz'
-questions = np.load(questions_path, allow_pickle=True)['arr_0']
+chunk_questions_path = paths.d_ANNOTATIONS / 'vqa' / 'train2014_questions-chunk_1.npz'
+q1 = np.load(chunk_questions_path, allow_pickle=True)['arr_0']
+len(q1)
 #%%
-questions[0].keys()
+indexes = np.linspace(
+    start=0,
+    stop=consts.COCO_TRAIN2014_QA_SIZE-1,
+    num=consts.FILE_CHUNK_NUM+1,
+    dtype=int,
+)[1:].tolist()
 
-#%%
-def load_answer(index):
-    output = torch.zeros(len(candidate_answers))
+chunk_size = (consts.COCO_TRAIN2014_QA_SIZE-1) / (consts.FILE_CHUNK_NUM+1)
+index = 266253
+(index // chunk_size - 1), (index % chunk_size)
+chunk_size
 
-    for key, value in answers[index].items():
-        output[int(key)] = min(value, 3)
-
-    return np.divide(output, 3)
-
-la = load_answer(0)
-
-# output = torch.zeros(len(candidate_answers))
-#%%
-answers[0]
 
 #%%
 class VQADataset(Dataset):
@@ -46,54 +38,60 @@ class VQADataset(Dataset):
         Args:
             dataset_name (str): train2014 or val2014
         """
-        self.questions_path = pathes.d_ANNOTATIONS / 'vqa' / f'{dataset_name}_questions.json'
-        self.questions = json.load(open(self.questions_path, 'r'))['data']
+        self.chunk_indexes = np.linspace(
+            start=0,
+            stop=consts.COCO_TRAIN2014_DATA_SIZE,
+            num=consts.FILE_CHUNK_NUM+1,
+            dtype=int,
+        )[1:].tolist()
+        self.current_chunk_index = 0
+        self.chunk_data_num = consts.COCO_TRAIN2014_DATA_SIZE // consts.FILE_CHUNK_NUM
 
-        self.answers_path = pathes.d_ANNOTATIONS / 'vqa' / f'{dataset_name}_answers.json'
-        self.answers = json.load(open(self.answers_path, 'r'))['data']
+        self.answers_path = paths.d_ANNOTATIONS / 'vqa' / f'{dataset_name}_answers.npz'
+        self.answers = np.load(self.answers_path, allow_pickle=True)['arr_0']
 
-        self.feature_path = pathes.d_COCO_FEATURE / dataset_name
-        self.graph_path = pathes.d_COCO_GRAPH / dataset_name
+        self.feature_path = paths.d_COCO_FEATURE / dataset_name
+        self.graph_path = paths.d_COCO_GRAPH / dataset_name
             
-        self.candidate_answers = pathes.f_CANDIDATE_ANSWERS.read_text().splitlines()
-        self.glove_vocabularies = pathes.f_GOLVE_VOCABULARIES.read_text().splitlines()
+        self.candidate_answers = paths.f_CANDIDATE_ANSWERS.read_text().splitlines()
+        self.glove_vocabularies = paths.f_GOLVE_VOCABULARIES.read_text().splitlines()
 
-        assert len(questions) == len(answers)
-        
-    def __len__(self):
-        return len(self.questions)
+    def __load_questions_data(self, index: int):
+        if index > self.chunk_indexes[self.current_chunk_index]:
+            self.chunk_questions_path = paths.d_ANNOTATIONS / 'vqa' / f'{self.dataset_name}_questions-chunk_{self.current_chunk_index}.npz'
+            self.chunk_questions = np.load(self.chunk_questions_path, allow_pickle=True)['arr_0']
+            self.current_chunk_index += 1
+
+        if index < self.chunk_indexes[0]:
+            return self.chunk_questions[index]
+
+        shifted_index = index - self.chunk_indexes[self.current_chunk_index-1]
+
+        return self.chunk_questions[shifted_index]
     
-    def load_answer(self, index):
+    def __load_answer_data(self, index: int):
+        top_k = 3
         output = torch.zeros(len(self.candidate_answers))
 
         for key, value in self.answers[index].items():
-            output[int(key)] = min(value, 3)
+            output[key] = min(value, top_k)
 
-        return np.divide(output, 3)
+        return output / top_k
+
+    def __len__(self):
+        return len(self.answers)
         
     def get_vqa(self, index):
-        filename = self.questions[index]['img_file']
-
-        img_path = self.feature_path / filename
-        image = np.load(img_path)['x']
-
-        graph_path = self.graph_path / filename
-        graph = np.load(graph_path)['graph']
-
-        q = torch.tensor(self.questions[index]['q'], dtype=torch.long)
+        a = self.__load_answer_data(index)
+        q, image, graph = self.__load_questions_data(index)
 
         return {
             'id': index,
             'v': image,
             'q': q,
-            'a': self.load_answer(index),
-            'graph': graph
+            'a': a,
+            'graph': graph,
         }
-    
-    def make_cache(self):
-        cache_list = []
-        for i in tqdm(range(len(self))):
-            cache_list.append(self.get_vqa(i))
     
     def __getitem__(self, index):
         return self.get_vqa(index)

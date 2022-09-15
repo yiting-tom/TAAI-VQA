@@ -3,7 +3,7 @@ from pathlib import Path
 import re
 import string
 from typing import List, Dict
-from configs import pathes
+from configs import paths
 from configs.logger import l
 
 contractions = {
@@ -153,8 +153,8 @@ def save_candidate_answer(occurence: List, save_path: Path) -> None:
 def main():
     l.info('Generating candidate answers ...')
     answers: Dict = load_datasets_answers(
-        train_file=pathes.d_VQA / 'v2_mscoco_train2014_annotations.json',
-        val_file=pathes.d_VQA / 'v2_mscoco_val2014_annotations.json',
+        train_file=paths.d_VQA / 'v2_mscoco_train2014_annotations.json',
+        val_file=paths.d_VQA / 'v2_mscoco_val2014_annotations.json',
     )
 
     occurence: Dict = filter_answers(
@@ -164,7 +164,7 @@ def main():
 
     save_candidate_answer(
         occurence=occurence.keys(),
-        sagve_path=pathes.f_CANDIDATE_ANSWERS,
+        sagve_path=paths.f_CANDIDATE_ANSWERS,
     )
 
 if __name__ == '__main__':

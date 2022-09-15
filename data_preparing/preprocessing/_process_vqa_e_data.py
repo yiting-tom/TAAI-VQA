@@ -37,15 +37,19 @@ def process_vqa_e_data(
 
     # Read-out VQA-E data
     with open(f'{vqa_e_dir}/{dataset_type}_set.json') as f:
-        data = json.load(f)
+        a_data = json.load(f)
 
     # Iterate over all data
-    for index in tqdm(range(len(data)), desc=f'VQA-E {dataset_type}'):
+    for i, datum in tqdm(
+        a_data,
+        desc=f'VQA-E {dataset_type}',
+        total=len(a_data),
+    ):
         temp = {}
-        temp['img_id'] = data[index]['img_id']
+        temp['img_id'] = datum['img_id']
         # ============== Process question ===============
         _, ids = utils.get_tokens_and_ids(
-            sentence=data[index]['question'],
+            sentence=datum['question'],
             vocab_dict=vocab_dict,
         )
         ids, _ = utils.padding_ids(
@@ -56,7 +60,7 @@ def process_vqa_e_data(
         temp['q'] = ids.copy()
         # ============= Process explanation =============
         tokens, ids = utils.get_tokens_and_ids(
-            sentence=data[index]['explanation'][0],
+            sentence=datum['explanation'][0],
             vocab_dict=vocab_dict,
         )
         ids, pad_len = utils.padding_ids(
@@ -68,7 +72,7 @@ def process_vqa_e_data(
         temp['c_tokens'] = ' '.join(tokens)
         temp['c_len'] = pad_len
         # =============== Process answer ================
-        cur_answer_list: List[str] = data[index]['answers']
+        cur_answer_list: List[str] = datum['answers']
         cnt = Counter(cur_answer_list)
         temp['a'] = dict(zip(
             # Change the key from token to id
@@ -81,7 +85,7 @@ def process_vqa_e_data(
         # ===============================================
         result.append(temp.copy())
 
-    save_path: Path = Path(f'{save_path}/vqa-e/{dataset_type}.npz')
+    save_path: Path = Path(f'{save_path}/vqa-e/{dataset_type}')
     # Ensure the directory exists
     save_path.parent.mkdir(parents=True, exist_ok=True)
     # Save the processed data
