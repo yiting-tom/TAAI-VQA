@@ -11,13 +11,10 @@ log_dir.mkdir(parents=True, exist_ok=True)
 # set log file name
 log_file_name = f"{time.strftime('%Y%m%d_%H%M%S')}.log"
 
-l = logging.getLogger('l')
+l = logging.getLogger("l")
 l.setLevel(logging.DEBUG)
 
-fileHandler = logging.FileHandler(
-    filename=log_dir / log_file_name,
-    mode='w'
-)
+fileHandler = logging.FileHandler(filename=log_dir / log_file_name, mode="w")
 streamHandler = logging.StreamHandler()
 
 allFormatter = logging.Formatter(

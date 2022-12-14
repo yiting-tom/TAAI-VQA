@@ -4,36 +4,40 @@ from tqdm import tqdm
 from configs import paths
 from configs.logger import l
 
+
 def load_glove_vocabulary(glove_file: Path) -> List:
     """Load GloVe vocabulary"""
-    l.info('Loading GloVe vocabulary ...')
+    l.info("Loading GloVe vocabulary ...")
     vocab = []
     with open(glove_file) as f:
-        load = f.read().split('\n')
+        load = f.read().split("\n")
         for i in tqdm(load, total=len(load)):
-            temp = i.split(' ')[0]
-            if temp != '':
+            temp = i.split(" ")[0]
+            if temp != "":
                 vocab.append(temp)
     return vocab
 
+
 def save_glove_vocabulary(vocab: List, save_path: Path) -> None:
     """Save GloVe vocabulary to file"""
-    l.info('Saving GloVe vocabulary')
-    with open(save_path, 'w') as f:
-        f.write('\n'.join(vocab))
+    l.info("Saving GloVe vocabulary")
+    with open(save_path, "w") as f:
+        f.write("\n".join(vocab))
+
 
 def main():
     l.info("Generating GloVe vocabulary ...")
     vocab = load_glove_vocabulary(
-        glove_file=paths.f_GLOVE/'glove.6B.300d.txt',
+        glove_file=paths.f_GLOVE / "glove.6B.300d.txt",
     )
 
-    vocab += ['<start>', '<end>', '<pad>', '<oov>']
+    vocab += ["<start>", "<end>", "<pad>", "<oov>"]
 
     save_glove_vocabulary(
         vocab=vocab,
         save_path=paths.f_GOLVE_VOCABULARIES,
     )
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

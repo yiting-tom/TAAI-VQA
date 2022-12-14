@@ -13,26 +13,24 @@ from torch.nn.utils.weight_norm import weight_norm
 
 
 class FCNet(nn.Module):
-    """Simple class for non-linear fully connect network
-    """
-    def __init__(self, dims, act='ReLU', dropout=0, bias=True):
+    """Simple class for non-linear fully connect network"""
+
+    def __init__(self, dims, act="ReLU", dropout=0, bias=True):
         super(FCNet, self).__init__()
 
         layers = []
-        for i in range(len(dims)-2):
+        for i in range(len(dims) - 2):
             in_dim = dims[i]
-            out_dim = dims[i+1]
+            out_dim = dims[i + 1]
             if 0 < dropout:
                 layers.append(nn.Dropout(dropout))
-            layers.append(weight_norm(nn.Linear(in_dim, out_dim, bias=bias),
-                                      dim=None))
-            if '' != act and act is not None:
+            layers.append(weight_norm(nn.Linear(in_dim, out_dim, bias=bias), dim=None))
+            if "" != act and act is not None:
                 layers.append(getattr(nn, act)())
         if 0 < dropout:
             layers.append(nn.Dropout(dropout))
-        layers.append(weight_norm(nn.Linear(dims[-2], dims[-1], bias=bias),
-                                  dim=None))
-        if '' != act and act is not None:
+        layers.append(weight_norm(nn.Linear(dims[-2], dims[-1], bias=bias), dim=None))
+        if "" != act and act is not None:
             layers.append(getattr(nn, act)())
 
         self.main = nn.Sequential(*layers)
@@ -42,9 +40,10 @@ class FCNet(nn.Module):
 
 
 class GraphSelfAttentionLayer(nn.Module):
-    def __init__(self, feat_dim, nongt_dim=20, pos_emb_dim=-1,
-                 num_heads=16, dropout=[0.2, 0.5]):
-        """ Attetion module with vectorized version
+    def __init__(
+        self, feat_dim, nongt_dim=20, pos_emb_dim=-1, num_heads=16, dropout=[0.2, 0.5]
+    ):
+        """Attetion module with vectorized version
         Args:
             position_embedding: [num_rois, nongt_dim, pos_emb_dim]
                                 used in implicit relation
@@ -61,9 +60,11 @@ class GraphSelfAttentionLayer(nn.Module):
         self.fc_dim = num_heads
         self.feat_dim = feat_dim
         self.dim = (feat_dim, feat_dim, feat_dim)
-        self.dim_group = (int(self.dim[0] / num_heads),
-                          int(self.dim[1] / num_heads),
-                          int(self.dim[2] / num_heads))
+        self.dim_group = (
+            int(self.dim[0] / num_heads),
+            int(self.dim[1] / num_heads),
+            int(self.dim[2] / num_heads),
+        )
         self.num_heads = num_heads
         self.pos_emb_dim = pos_emb_dim
         if self.pos_emb_dim > 0:
@@ -74,13 +75,16 @@ class GraphSelfAttentionLayer(nn.Module):
         self.key = FCNet([feat_dim, self.dim[1]], None, dropout[0])
 
         self.linear_out_ = weight_norm(
-                            nn.Conv2d(in_channels=self.fc_dim * feat_dim,
-                                      out_channels=self.dim[2],
-                                      kernel_size=(1, 1),
-                                      groups=self.fc_dim), dim=None)
+            nn.Conv2d(
+                in_channels=self.fc_dim * feat_dim,
+                out_channels=self.dim[2],
+                kernel_size=(1, 1),
+                groups=self.fc_dim,
+            ),
+            dim=None,
+        )
 
-    def forward(self, roi_feat, adj_matrix,
-                position_embedding, label_biases_att):
+    def forward(self, roi_feat, adj_matrix, position_embedding, label_biases_att):
         """
         Args:
             roi_feat: [batch_size, N, feat_dim]
@@ -92,7 +96,7 @@ class GraphSelfAttentionLayer(nn.Module):
         batch_size = roi_feat.size(0)
         num_rois = roi_feat.size(1)
         nongt_dim = self.nongt_dim if self.nongt_dim < num_rois else num_rois
-        
+
         # [batch_size, nongt_dim, feat_dim]
         nongt_roi_feat = roi_feat[:, :nongt_dim, :]
 
@@ -101,8 +105,9 @@ class GraphSelfAttentionLayer(nn.Module):
         q_data = self.query(roi_feat)
 
         # [batch_size, num_rois, num_heads, feat_dim / num_heads]
-        q_data_batch = q_data.view(batch_size, num_rois, self.num_heads,
-                                   self.dim_group[0])
+        q_data_batch = q_data.view(
+            batch_size, num_rois, self.num_heads, self.dim_group[0]
+        )
 
         # [batch_size, num_heads, num_rois, feat_dim / num_heads]
         q_data_batch = torch.transpose(q_data_batch, 1, 2)
@@ -112,8 +117,9 @@ class GraphSelfAttentionLayer(nn.Module):
         k_data = self.key(nongt_roi_feat)
 
         # [batch_size, nongt_dim, num_heads, feat_dim / num_heads]
-        k_data_batch = k_data.view(batch_size, nongt_dim, self.num_heads,
-                                   self.dim_group[1])
+        k_data_batch = k_data.view(
+            batch_size, nongt_dim, self.num_heads, self.dim_group[1]
+        )
 
         # [batch_size, num_heads, nongt_dim, feat_dim / num_heads]
         k_data_batch = torch.transpose(k_data_batch, 1, 2)
@@ -137,7 +143,8 @@ class GraphSelfAttentionLayer(nn.Module):
             position_embedding = position_embedding.float()
             # [batch_size,num_rois * nongt_dim, emb_dim]
             position_embedding_reshape = position_embedding.view(
-                (batch_size, -1, self.pos_emb_dim))
+                (batch_size, -1, self.pos_emb_dim)
+            )
 
             # position_feat_1, [batch_size,num_rois * nongt_dim, fc_dim]
             position_feat_1 = self.pair_pos_fc1(position_embedding_reshape)
@@ -145,7 +152,8 @@ class GraphSelfAttentionLayer(nn.Module):
 
             # aff_weight, [batch_size,num_rois, nongt_dim, fc_dim]
             aff_weight = position_feat_1_relu.view(
-                (batch_size, -1, nongt_dim, self.fc_dim))
+                (batch_size, -1, nongt_dim, self.fc_dim)
+            )
 
             # aff_weight, [batch_size,num_rois, fc_dim, nongt_dim]
             aff_weight = torch.transpose(aff_weight, 2, 3)
@@ -159,23 +167,22 @@ class GraphSelfAttentionLayer(nn.Module):
         if adj_matrix is not None:
             # weighted_aff_transposed, [batch_size, num_rois, nongt_dim, num_heads]
             weighted_aff_transposed = torch.transpose(weighted_aff, 2, 3)
-            zero_vec = -9e15*torch.ones_like(weighted_aff_transposed)
+            zero_vec = -9e15 * torch.ones_like(weighted_aff_transposed)
 
             # adj_matrix, [batch_size, num_rois, nongt_dim, 1]
             adj_matrix = adj_matrix.view(
-                            adj_matrix.shape[0], adj_matrix.shape[1],
-                            adj_matrix.shape[2], 1)
+                adj_matrix.shape[0], adj_matrix.shape[1], adj_matrix.shape[2], 1
+            )
             # adj_matrix_expand, [batch_size, num_rois, nongt_dim, num_heads]
             adj_matrix_expand = adj_matrix.expand(
-                                (-1, -1, -1,
-                                 weighted_aff_transposed.shape[-1]))
+                (-1, -1, -1, weighted_aff_transposed.shape[-1])
+            )
             # Mask the unrelated edges
-            weighted_aff_masked = torch.where(adj_matrix_expand > 0,
-                                              weighted_aff_transposed,
-                                              zero_vec)
+            weighted_aff_masked = torch.where(
+                adj_matrix_expand > 0, weighted_aff_transposed, zero_vec
+            )
 
-            weighted_aff_masked = weighted_aff_masked + \
-                label_biases_att.unsqueeze(3)
+            weighted_aff_masked = weighted_aff_masked + label_biases_att.unsqueeze(3)
             # [batch_size, num_rois, num_heads, nongt_dim]
             weighted_aff = torch.transpose(weighted_aff_masked, 2, 3)
 
@@ -198,10 +205,19 @@ class GraphSelfAttentionLayer(nn.Module):
 
 
 class GAttNet(nn.Module):
-    def __init__(self, dir_num, label_num, in_feat_dim, out_feat_dim,
-                 nongt_dim=20, dropout=0.2, label_bias=True, 
-                 num_heads=16, pos_emb_dim=-1):
-        """ Attetion module with vectorized version
+    def __init__(
+        self,
+        dir_num,
+        label_num,
+        in_feat_dim,
+        out_feat_dim,
+        nongt_dim=20,
+        dropout=0.2,
+        label_bias=True,
+        num_heads=16,
+        pos_emb_dim=-1,
+    ):
+        """Attetion module with vectorized version
         Args:
             label_num: numer of edge labels
             dir_num: number of edge directions
@@ -217,17 +233,18 @@ class GAttNet(nn.Module):
         self.in_feat_dim = in_feat_dim
         self.out_feat_dim = out_feat_dim
         self.dropout = nn.Dropout(dropout)
-        self.self_weights = FCNet([in_feat_dim, out_feat_dim], '', dropout)
-        self.bias = FCNet([label_num, 1], '', 0, label_bias)
+        self.self_weights = FCNet([in_feat_dim, out_feat_dim], "", dropout)
+        self.bias = FCNet([label_num, 1], "", 0, label_bias)
         self.nongt_dim = nongt_dim
         self.pos_emb_dim = pos_emb_dim
         neighbor_net = []
         for i in range(dir_num):
             g_att_layer = GraphSelfAttentionLayer(
-                                pos_emb_dim=pos_emb_dim,
-                                num_heads=num_heads,
-                                feat_dim=out_feat_dim,
-                                nongt_dim=nongt_dim)
+                pos_emb_dim=pos_emb_dim,
+                num_heads=num_heads,
+                feat_dim=out_feat_dim,
+                nongt_dim=nongt_dim,
+            )
             neighbor_net.append(g_att_layer)
         self.neighbor_net = nn.ModuleList(neighbor_net)
 
@@ -243,11 +260,10 @@ class GAttNet(nn.Module):
         if self.pos_emb_dim > 0 and pos_emb is None:
             raise ValueError(
                 f"position embedding is set to None "
-                f"with pos_emb_dim {self.pos_emb_dim}")
+                f"with pos_emb_dim {self.pos_emb_dim}"
+            )
         elif self.pos_emb_dim < 0 and pos_emb is not None:
-            raise ValueError(
-                f"position embedding is NOT None "
-                f"with pos_emb_dim < 0")
+            raise ValueError(f"position embedding is NOT None " f"with pos_emb_dim < 0")
         batch_size, num_rois, feat_dim = v_feat.shape
         nongt_dim = self.nongt_dim
 
@@ -272,8 +288,8 @@ class GAttNet(nn.Module):
 
             # [batch_size,num_rois, out_feat_dim]
             temp, att = self.neighbor_net[d].forward(
-                        self_feat, condensed_adj_matrix, pos_emb,
-                        v_biases_neighbors)
+                self_feat, condensed_adj_matrix, pos_emb, v_biases_neighbors
+            )
             neighbor_emb[d] = temp
             atts[d] = att
 
@@ -282,5 +298,6 @@ class GAttNet(nn.Module):
         output = self.dropout(output)
         output = nn.functional.relu(output)
 
-        if show_att: return atts
+        if show_att:
+            return atts
         return output

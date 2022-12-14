@@ -14,6 +14,7 @@ INDICES = torch.cat(
     dim=0,
 ).T.split(1, dim=0)
 
+
 def process_relationship(
     dataset_type: str,
     feature_dir: str,
@@ -33,19 +34,19 @@ def process_relationship(
 
     # load all feature files
     feature_dir: Path = Path(feature_dir) / f"{dataset_type}2014"
-    feature_files = feature_dir.glob('*.npz')
+    feature_files = feature_dir.glob("*.npz")
 
     # process each feature file
     for feature_file in tqdm(
         feature_files,
         desc=f"Processing {dataset_type} relationship",
-        total=len(list(feature_dir.glob('*.npz')))
+        total=len(list(feature_dir.glob("*.npz"))),
     ):
         # read feature file
         feature = np.load(feature_file)
 
         # get the bbox coordinates
-        bboxes = feature['bbox']
+        bboxes = feature["bbox"]
 
         # get the bbox pairs coordinates
         batch = torch.from_numpy(bboxes[BBOXES_PAIR_INDEXES])
@@ -53,14 +54,14 @@ def process_relationship(
         # generate the relationship id between bbox pairs
         relationship = __generate_relationship_values(
             batch_bbox_pair=batch,
-            image_width=float(feature['image_w']),
-            image_height=float(feature['image_h']),
+            image_width=float(feature["image_w"]),
+            image_height=float(feature["image_h"]),
             iou_threshold=0.5,
             a_b_distance_ratio_threshold=0.5,
         )
 
         # initialize the graph
-        graph = torch.empty([36,36]).long()
+        graph = torch.empty([36, 36]).long()
 
         # format the relationship indices to (1260 = 36*36-36)
         values = relationship.T.reshape(-1)
@@ -76,6 +77,7 @@ def process_relationship(
 
         # save the graph
         np.savez(f"{graph_dir}/{feature_file.name}", graph=out)
+
 
 def __generate_relationship_values(
     batch_bbox_pair: torch.FloatTensor,
@@ -147,8 +149,9 @@ def __generate_relationship_values(
 
     return relationship
 
+
 def __get_a_b_intersaction_bboxes(
-    batch_bbox_pair: torch.Tensor,    
+    batch_bbox_pair: torch.Tensor,
 ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     """__get_bboxes
 
@@ -165,15 +168,19 @@ def __get_a_b_intersaction_bboxes(
     b_bbox = batch_bbox_pair[:, 1, :]
 
     # intersaction of A and B, whit shape = (B, 4)
-    intersaction_bbox = torch.cat([
-        batch_bbox_pair[..., :2].max(dim=1)[0],
-        batch_bbox_pair[..., 2:].min(dim=1)[0],
-    ], dim=1)
+    intersaction_bbox = torch.cat(
+        [
+            batch_bbox_pair[..., :2].max(dim=1)[0],
+            batch_bbox_pair[..., 2:].min(dim=1)[0],
+        ],
+        dim=1,
+    )
 
     return a_bbox, b_bbox, intersaction_bbox
 
+
 def __get_centers(
-    batch_bbox_pair: torch.Tensor,    
+    batch_bbox_pair: torch.Tensor,
 ) -> Tuple[torch.Tensor, torch.Tensor]:
     """__get_centers
 
@@ -185,13 +192,17 @@ def __get_centers(
     """
     # shape = (batch_size, bbox_center_coordinate_values=2)
     # center of a and b
-    get_center = lambda x: torch.stack([
-        x[..., 0] + (x[..., 2] - x[..., 0]) / 2,
-        x[..., 1] + (x[..., 3] - x[..., 1]) / 2,
-    ], dim=-1)
+    get_center = lambda x: torch.stack(
+        [
+            x[..., 0] + (x[..., 2] - x[..., 0]) / 2,
+            x[..., 1] + (x[..., 3] - x[..., 1]) / 2,
+        ],
+        dim=-1,
+    )
     centers = get_center(batch_bbox_pair)
 
     return centers[..., 0], centers[..., 1]
+
 
 def __generate_relationship_indexes_by_angle(
     a_b_center_difference: torch.Tensor,
@@ -204,6 +215,7 @@ def __generate_relationship_indexes_by_angle(
     Returns:
         torch.Tensor: The relationship indexes
     """
+
     def get_angle(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         angle = torch.atan(y / x)
         # Since the arctan with the range of [-pi/2, pi/2],
@@ -215,7 +227,7 @@ def __generate_relationship_indexes_by_angle(
 
     def angle_to_index(angle: torch.Tensor) -> torch.Tensor:
         # split the angle into 8 parts
-        a_index = (torch.ceil(angle / (torch.pi/4)) - 1) % 8 + 1
+        a_index = (torch.ceil(angle / (torch.pi / 4)) - 1) % 8 + 1
         # the index of b is oppsited to a
         b_index = (a_index + 3) % 8 + 1
         # padding classes 1 to 3
@@ -233,6 +245,7 @@ def __generate_relationship_indexes_by_angle(
     relationship_indexes = angle_to_index(angle).long()
 
     return relationship_indexes
+
 
 def __filter_by_bboxes_distance_ratio(
     image_width: int,
@@ -259,6 +272,7 @@ def __filter_by_bboxes_distance_ratio(
     ratio = bboxes_diagonal / image_diagonal
     # filter out the bboxes which distance ratio is larger than threshold
     return ratio >= a_b_distance_ratio_threshold
+
 
 def __filter_overlap_relationship_by_iou(
     a_bbox: torch.Tensor,
@@ -288,18 +302,26 @@ def __filter_overlap_relationship_by_iou(
 
     # If IoU < threshold
     iou = (area_a + area_b) / area_intersaction
-    threshold = 1 + 1/iou_threshold
+    threshold = 1 + 1 / iou_threshold
     less_than_threshold = iou < threshold
 
     # FIXED: filter out intersaction is not overlap
     a_b_center_distance = a_b_center_difference.abs()
     a_b_center_distance_x = a_b_center_distance[..., 0]
     a_b_center_distance_y = a_b_center_distance[..., 1]
-    union_length_x = (a_bbox[..., 2] - a_bbox[..., 0] + b_bbox[..., 2] - b_bbox[..., 0]) / 2
-    union_length_y = (a_bbox[..., 3] - a_bbox[..., 1] + b_bbox[..., 3] - b_bbox[..., 1]) / 2
-    filter_mask = ~((a_b_center_distance_x > union_length_x) | (a_b_center_distance_y > union_length_y))
+    union_length_x = (
+        a_bbox[..., 2] - a_bbox[..., 0] + b_bbox[..., 2] - b_bbox[..., 0]
+    ) / 2
+    union_length_y = (
+        a_bbox[..., 3] - a_bbox[..., 1] + b_bbox[..., 3] - b_bbox[..., 1]
+    ) / 2
+    filter_mask = ~(
+        (a_b_center_distance_x > union_length_x)
+        | (a_b_center_distance_y > union_length_y)
+    )
 
     return less_than_threshold & filter_mask
+
 
 def __filter_A_is_inside_B(
     a_bbox: torch.Tensor,
@@ -316,6 +338,7 @@ def __filter_A_is_inside_B(
     """
     # If IoU equal to a, then a is inside b.
     return (a_bbox == intersaction_bbox).all(dim=1)
+
 
 def __filter_A_covers_B(
     b_bbox: torch.Tensor,

@@ -3,6 +3,7 @@ from typing import List
 from data_preparing import preprocessing
 from configs.logger import l
 
+
 def process_all():
     args = preprocessing.parse_args()
     l.info(f"preprocess all with args: {args.__dict__}")
@@ -17,8 +18,10 @@ def process_all():
     )
 
     # Specify the dataset type
-    dataset_types: List = ['train', 'val'] if args.dataset_type == 'all' else [args.dataset_type]
-    
+    dataset_types: List = (
+        ["train", "val"] if args.dataset_type == "all" else [args.dataset_type]
+    )
+
     # Iterate over the dataset types
     for dataset_type in dataset_types:
         # # relationship graph preprocessing

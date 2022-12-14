@@ -1,5 +1,6 @@
 from typing import Any, Dict, List, Tuple
 
+
 def load_vocab_ans_dicts(
     vocab_file: str,
     ans_file: str,
@@ -19,9 +20,8 @@ def load_vocab_ans_dicts(
 
     return vocab_dict, ans_dict
 
-def __to_idx_dict(
-    target: List[Any]
-) -> Dict[Any, int]:
+
+def __to_idx_dict(target: List[Any]) -> Dict[Any, int]:
     """to_idx_dict
 
     Args:
@@ -32,6 +32,7 @@ def __to_idx_dict(
     """
     return {t: i for i, t in enumerate(target)}
 
+
 def __read_file_line_by_line(vocab_path: str) -> List[str]:
     """__get_vocab_list
 
@@ -41,6 +42,6 @@ def __read_file_line_by_line(vocab_path: str) -> List[str]:
     Returns:
         List[str]: The vocabulary list.
     """
-    with open(vocab_path, encoding='utf-8') as f:
-        vocab_list = f.read().split('\n')
+    with open(vocab_path, encoding="utf-8") as f:
+        vocab_list = f.read().split("\n")
     return vocab_list
